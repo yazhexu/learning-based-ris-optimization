@@ -71,3 +71,13 @@ The neural-network model trained with optimized algorithms improved system fitti
   (a) Neural network model (R² = 0.9292)  (b) Baseline model (R² = 0.8415)
 </p>
 
+## Code Structure
+```
+├── ris_baseline.m              # Linear regression baseline model training and evaluation
+├── ris_nn_final.m              # Neural network training with Gradient Descent (GD)
+├── convergence_curves.png      # Convergence curves of four optimization algorithms
+├── r2_comparison.png           # Predicted vs. True Sum Rate comparison (Baseline vs. NN)
+├── README.md                   # Project documentation
+└── LICENSE                     # License file for project usage
+```
+
