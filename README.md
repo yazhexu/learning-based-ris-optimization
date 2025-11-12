@@ -52,7 +52,21 @@ The neural-network model trained with optimized algorithms improved system fitti
 
 ### 3. Visualization
 
-**Figure 1.** Convergence curves of four optimization algorithms.  
-**Figure 2.** Predicted vs. True Sum Rate (Baseline vs. Neural Network).  
+**Figure 1.** Convergence curves of four optimization algorithms. 
+<p align="center">
+  <img src="convergence_curve.png" alt="Convergence curves of four optimization algorithms" width="650">
+</p>
 
+<p align="center">
+  <b>Figure 1.</b> Convergence curves of four optimization algorithms.
+</p>
+**Figure 2.** Predicted vs. True Sum Rate (Baseline vs. Neural Network).  
+<p align="center">
+  <img src="r2_comparison.png" alt="Predicted vs. True Sum Rate for the baseline and neural network models" width="650">
+</p>
+
+<p align="center">
+  <b>Figure 2.</b> Predicted vs. True Sum Rate for the baseline and neural network models.<br>
+  (a) Neural network model (R² = 0.9292)  (b) Baseline model (R² = 0.8415)
+</p>
 
