@@ -80,4 +80,35 @@ The neural-network model trained with optimized algorithms improved system fitti
 ├── README.md                   # Project documentation
 └── LICENSE                     # License file for project usage
 ```
+## Reproduction
+
+The project can be reproduced using MATLAB R2025b or later.
+
+### Step 1. Clone the repository
+```bash
+git clone https://github.com/yazhexu/learning-based-ris-optimization.git
+cd learning-based-ris-optimization
+```
+### Step 2. Run in MATLAB
+```
+% Baseline (linear regression)
+ris_baseline;
+
+% Neural network training with Gradient Descent (GD)
+ris_nn_final;
+```
+### Step 3. Outputs
+| File | Description |
+|------|-------------|
+| baseline_performance.png | Predicted vs. True Sum Rate — Baseline model |
+| nn_performance.png | Predicted vs. True Sum Rate — Neural network model |
+
+Key metrics (MSE, RMSE, MAE, R²) are printed in the MATLAB command window.
+## Author & Acknowledgment
+
+Developed by **Yazhe Xu**, University of California, Irvine (UCI).  
+Supervised by **Prof. Ender Ayanoglu**.  
+
+This repository is part of ongoing research on algorithmic optimization and learning-based modeling in Reconfigurable Intelligent Surface (RIS) communication systems.  
+All code and figures are provided for academic and research purposes.
 
