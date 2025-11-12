@@ -46,7 +46,7 @@ Evaluation metrics include **MSE**, **RMSE**, **MAE**, and **R²**.
 | **Neural Network (Optimized)** | **0.0385** | **0.1962** | **0.1250** | **0.9292** |
 
 **Finding:**  
-The neural-network model trained with optimized algorithms improved system fitting accuracy by **over 20%** in R² compared to the baseline, demonstrating superior generalization and predictive stability in realistic RIS environments.
+The neural-network model trained with optimized algorithms improved system fitting accuracy by **over 10%** in R² compared to the baseline, demonstrating superior generalization and predictive stability in realistic RIS environments.
 
 ---
 
