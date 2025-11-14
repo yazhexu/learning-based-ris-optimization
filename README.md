@@ -9,6 +9,48 @@ Modern wireless communication systems, such as RIS-assisted networks, involve co
 To capture the underlying physical behaviors, data-driven models are often used to approximate system dynamics.  
 However, achieving high-fidelity model fitting to realistic RIS behavior remains a challenge.  
 This project explores how optimization algorithms can be used to train neural-network models that more accurately represent real RIS systems.
+
+
+## Feature Modeling and Correlation Analysis
+
+### 1. Physics-Informed Feature Modeling
+
+To avoid using the full **1664-dimensional raw RIS cascaded channel**, this project uses a physics-informed feature extractor to convert each RIS configuration into **23 interpretable descriptors**, including:
+
+- **User-level SINR components:** signal power, interference power, SINR (linear & dB), estimated rate  
+- **System-level metrics:** total signal power, power-balance index  
+- **Channel structure:** effective condition number of the cascaded channel  
+
+These features capture the dominant physical factors that govern RIS system performance and provide a compact, low-dimensional representation for learning.
+
+---
+
+### 2. Feature–Target Correlation
+
+A lightweight correlation analysis is performed to identify which physics-based descriptors most strongly influence the RIS sum-rate.
+
+```matlab
+% Feature–target correlation
+correlations = zeros(size(X_train,1), 1);
+for i = 1:size(X_train,1)
+    if std(X_train(i,:)) > 1e-8
+        C = corrcoef(X_train(i,:), Y_train);
+        correlations(i) = abs(C(1,2));
+    end
+end
+```
+
+---
+
+### 3. Correlation Result
+
+<p align="center">
+  <img src="correlation_plot.png" width="650">
+</p>
+
+<p align="center"><b>Figure.</b> Correlation between physics-based features and RIS sum-rate.</p>
+
+
 ## Methodology
 
 The project was implemented through the following key steps:
