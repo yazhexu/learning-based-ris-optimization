@@ -11,23 +11,23 @@ However, achieving high-fidelity model fitting to realistic RIS behavior remains
 This project explores how optimization algorithms can be used to train neural-network models that more accurately represent real RIS systems.
 
 
-## Feature Modeling and Correlation Analysis
+## Feature Extraction and Correlation Analysis
 
-### 1. Physics-Informed Feature Modeling
+### 1. Physics-Informed Feature Extraction
 
-To avoid using the full **1664-dimensional raw RIS cascaded channel**, this project uses a physics-informed feature extractor to convert each RIS configuration into **23 interpretable descriptors**, including:
+To replace the full **1664-dimensional cascaded RIS channel**, a physics-informed feature extractor is used to derive **23 interpretable descriptors**, including:
 
-- **User-level SINR components:** signal power, interference power, SINR (linear & dB), estimated rate  
+- **User-level SINR components:** signal power, interference power, SINR (linear and dB), estimated rate  
 - **System-level metrics:** total signal power, power-balance index  
-- **Channel structure:** effective condition number of the cascaded channel  
+- **Channel structure:** effective condition number  
 
-These features capture the dominant physical factors that govern RIS system performance and provide a compact, low-dimensional representation for learning.
+These descriptors capture key physical factors affecting RIS performance and provide a compact, stable representation for learning.
 
 ---
 
 ### 2. Feature–Target Correlation
 
-A lightweight correlation analysis is performed to identify which physics-based descriptors most strongly influence the RIS sum-rate.
+Correlation analysis is performed to quantify the influence of each descriptor on the RIS sum-rate.
 
 ```matlab
 % Feature–target correlation
@@ -35,9 +35,10 @@ correlations = zeros(size(X_train,1), 1);
 for i = 1:size(X_train,1)
     if std(X_train(i,:)) > 1e-8
         C = corrcoef(X_train(i,:), Y_train);
-        correlations(i) = abs(C(1,2));
+        correlations[i] = abs(C(1,2));
     end
 end
+
 ```
 
 ---
@@ -45,10 +46,10 @@ end
 ### 3. Correlation Result
 
 <p align="center">
-  <img src="correlation_plot.png" width="450">
+  <img src="correlation_plot.png" width="420">
 </p>
 
-<p align="center"><b>Figure.</b> Correlation between physics-based features and RIS sum-rate.</p>
+<p align="center"><b>Figure.</b> Correlation between physics-informed features and RIS sum-rate.</p>
 
 
 ## Methodology
