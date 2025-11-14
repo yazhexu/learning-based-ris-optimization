@@ -45,7 +45,7 @@ end
 ### 3. Correlation Result
 
 <p align="center">
-  <img src="correlation_plot.png" width="650">
+  <img src="correlation_plot.png" width="450">
 </p>
 
 <p align="center"><b>Figure.</b> Correlation between physics-based features and RIS sum-rate.</p>
@@ -53,13 +53,21 @@ end
 
 ## Methodology
 
-The project was implemented through the following key steps:
 
-1. **RIS System Modeling:** Built a realistic Reconfigurable Intelligent Surface (RIS) simulation framework to generate channel data and system features.  
-2. **Algorithmic Training:** Trained neural networks using four optimization algorithms — Gradient Descent (GD), Genetic Algorithm (GA), Particle Swarm Optimization (PSO), and Simulated Annealing (SA) — to study their convergence and stability.  
-3. **Model Integration:** Integrated the best-performing trained neural network into the RIS simulation for end-to-end performance evaluation.  
-4. **Baseline Comparison:** Implemented a linear regression baseline model within the same RIS setup for reference.  
-5. **Result Analysis:** Compared the neural-network and baseline models in terms of R², MSE, RMSE, and MAE, demonstrating improved fitting and prediction accuracy in realistic RIS environments.
+```
+Raw RIS Channel (1664-d)
+          ↓
+Physics-Informed Feature Extraction (23-d)
+          ↓
+Feature–Target Correlation Analysis
+          ↓
+Neural Network Training (optimizer comparison: GD / GA / PSO / SA; final model: GD)
+          ↓
+RIS System Integration (NN-based vs. baseline)
+          ↓
+Performance Evaluation (MSE / RMSE / MAE / R²)
+```
+
 ## Results & Key Findings
 
 ### 1. Optimization Algorithm Comparison
