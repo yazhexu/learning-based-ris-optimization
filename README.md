@@ -92,12 +92,13 @@ This reflects the mismatch between the random Rayleigh training data and the mor
 
 ## Code Structure
 ```
-├── ris_baseline.m              # Linear regression baseline model training and evaluation
-├── ris_nn_final.m              # Neural network training with Gradient Descent (GD)
-├── convergence_curves.png      # Convergence curves of four optimization algorithms
-├── r2_comparison.png           # Predicted vs. True Sum Rate comparison (Baseline vs. NN)
-├── README.md                   # Project documentation
-└── LICENSE                     # License file for project usage
+├── ris_baseline.m                 # Linear regression baseline model training and evaluation
+├── ris_nn_final.m                 # Neural network training with GD + generalization (K=0,5,10)
+├── convergence_curves.png         # Convergence curves of four optimization algorithms
+├── r2_comparison.png              # Predicted vs. True Sum Rate comparison (Baseline vs. NN)
+├── generalization_r2_k0_k5_k10.png # R² across Rician K-factors (generalization test)
+├── README.md                      # Project documentation
+└── LICENSE                        # License file
 ```
 ## Reproduction
 
@@ -113,16 +114,16 @@ cd learning-based-ris-optimization
 % Baseline (linear regression)
 ris_baseline;
 
-% Neural network training with Gradient Descent (GD)
+% Neural network training with GD + generalization (K=0,5,10)
 ris_nn_final;
 ```
 ### Step 3. Outputs
-| File | Description |
-|------|-------------|
-| baseline_performance.png | Predicted vs. True Sum Rate — Baseline model |
-| nn_performance.png | Predicted vs. True Sum Rate — Neural network model |
 
-Key metrics (MSE, RMSE, MAE, R²) are printed in the MATLAB command window.
+- `baseline_performance.png` — Predicted vs. true sum rate (baseline)
+- `nn_performance.png` — Predicted vs. true sum rate (neural network)
+- `generalization_r2_k0_k5_k10.png` — R² across Rician K-factors (generalization)
+- Key metrics (MSE, RMSE, MAE, R²) printed in the MATLAB command window
+
 ## Author & Acknowledgment
 
 Developed by **Yazhe Xu**, University of California, Irvine (UCI).  
