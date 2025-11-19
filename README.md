@@ -75,10 +75,20 @@ NN captures nonlinear RIS-related behaviours more effectively.
 </p>
 
 <p align="center">
-  <b>Figure 3.</b> R² performance of the trained neural network evaluated on channels with different Rician K-factors (train K = 0).
+  <b>Figure 3.</b> R² across Rician K-factors (train K=0).
 </p>
 
+**Performance Metrics Summary**
+| K  |   R²      |   RMSE    |   MAE    |
+|----|-----------|-----------|----------|
+| 0  | 0.90718   | 0.23323   | 0.13178  |
+| 5  | 0.71200   | 0.64977   | 0.38024  |
+| 10 | 0.64663   | 0.83075   | 0.50403  |
 
+**Finding:**  
+NN performs well on the training distribution (K=0).  
+Performance drops significantly at K=5 and K=10.  
+This reflects the mismatch between the random Rayleigh training data and the more deterministic LOS components in Rician fading.
 
 ## Code Structure
 ```
