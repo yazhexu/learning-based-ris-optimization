@@ -10,48 +10,6 @@ To capture the underlying physical behaviors, data-driven models are often used 
 However, achieving high-fidelity model fitting to realistic RIS behavior remains a challenge.  
 This project explores how optimization algorithms can be used to train neural-network models that more accurately represent real RIS systems.
 
-
-## Feature Extraction and Correlation Analysis
-
-### 1. Physics-Informed Feature Extraction
-
-To replace the full **1664-dimensional cascaded RIS channel**, a physics-informed feature extractor is used to derive **23 interpretable descriptors**, including:
-
-- **User-level SINR components:** signal power, interference power, SINR (linear and dB), estimated rate  
-- **System-level metrics:** total signal power, power-balance index  
-- **Channel structure:** effective condition number  
-
-These descriptors capture key physical factors affecting RIS performance and provide a compact, stable representation for learning.
-
----
-
-### 2. Feature–Target Correlation
-
-Correlation analysis is performed to quantify the influence of each descriptor on the RIS sum-rate.
-
-```matlab
-% Feature–target correlation
-correlations = zeros(size(X_train,1), 1);
-for i = 1:size(X_train,1)
-    if std(X_train(i,:)) > 1e-8
-        C = corrcoef(X_train(i,:), Y_train);
-        correlations[i] = abs(C(1,2));
-    end
-end
-
-```
-
----
-
-### 3. Correlation Result
-
-<p align="center">
-  <img src="correlation_plot.png" width="420">
-</p>
-
-<p align="center"><b>Figure.</b> Correlation between physics-informed features and RIS sum-rate.</p>
-
-
 ## Methodology
 
 
