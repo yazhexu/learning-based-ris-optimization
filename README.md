@@ -7,9 +7,9 @@ Work conducted under supervision of Prof. Ender Ayanoglu (UC Irvine).
 
 RIS-assisted channels are highly nonlinear and high-dimensional due to the cascaded Tx–RIS–Rx propagation and phase configuration. Direct analytical evaluation is expensive, so fast and accurate neural-network surrogate models are valuable for system design.  
 This project studies:  
-how different training algorithms behave,  
-how well a neural predictor models RIS-assisted sum-rate,  
-and how the model generalizes under distribution shift (Rayleigh → Rician, K=0/5/10).
+How different training algorithms behave,  
+How well a neural predictor models RIS-assisted sum-rate,  
+How the model generalizes under distribution shift (Rayleigh → Rician, K=0/5/10).
 
 
 ## Experiments & Results
