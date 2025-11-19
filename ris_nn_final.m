@@ -1,25 +1,120 @@
-%% ===================================================================== %%
-%  Reconfigurable Intelligent Surface (RIS) Neural Network Model
-%  Final validated solution based on physics-informed feature engineering.
-%  Author: Yazhe Xu, University of California, Irvine
-%  ---------------------------------------------------------------------
-%  Objective:
-%  Build a data-driven framework to predict RIS system sum-rate
-%  using both linear regression and neural network models, and
-%  evaluate algorithmic performance under realistic channel conditions.
-%% ===================================================================== %%
+% Neural network training + generalization (K=0,5,10)
+% Part of learning-based RIS optimization framework.
+
 
 clear; clc; close all;
 rng(42);
-%% === System Parameters ===
-M = 8; N = 64; K = 4; d = 1;
-sigma2 = 1e-3; P_BS = 10;
 
-fprintf('=== RIS Final Solution ===\n');
-fprintf('Physics-informed Sum Rate Prediction\n\n');
+%% --- System Parameters ---
+N = 64;       % RIS elements
+M = 8;        % BS antennas
+K = 4;        % users
+d = 1;        % data streams per user
+sigma2 = 1e-3;
+P_BS = 10;
+%% --- Generate RIS Channels and Phase Shifts ---
+% Tx -> RIS
+H = (randn(N, M) + 1j*randn(N, M)) / sqrt(2);
 
+% RIS -> Users
+G = cell(K,1);
+for k = 1:K
+    G{k} = (randn(1,N) + 1j*randn(1,N)) / sqrt(2);
+end
+
+% RIS Phase shifts
+Theta = 2*pi*rand(N,1);
+Psi = diag(exp(1j*Theta));
+
+% Effective channels for each user
+H_eff = cell(K,1);
+for k = 1:K
+    H_eff{k} = G{k} * Psi * H;   % 1 x M
+end
+
+disp('RIS system model generated: H, G, Theta, H_eff');
+
+
+
+%% === Dataset Generation Based on Existing RIS Framework ===
+N_samples = 1200;
+N_test = 1000;
+
+fprintf('Generating %d training samples based on existing RIS system...\n', N_samples);
+
+% --- Use existing RIS framework H, G, Theta from first segment ---
+Psi = diag(exp(1j*Theta));
+
+% Determine feature dimension using one sample
+W_temp = cell(K,1);
+for k = 1:K
+    W_temp{k} = (randn(M, d) + 1j*randn(M, d))/sqrt(2);  % Random initial beamforming
+end
+features_temp = extract_physics_features(H, G, W_temp, Theta, sigma2);
+feature_dim = length(features_temp);
+fprintf('Feature dimension: %d (vs. 1792 in raw vectorization)\n', feature_dim);
+
+% Initialize storage for dataset
+X_train = zeros(feature_dim, N_samples);
+Y_train = zeros(1, N_samples);
+valid_samples = 0;
+
+% --- Generate valid training samples ---
+for sample = 1:N_samples * 2  % Generate extra to filter invalid cases
+    if valid_samples >= N_samples
+        break;
+    end
+
+    % --- Randomized beamforming only, keep H, G, Theta fixed ---
+    W = cell(K,1);
+    for k = 1:K
+        W{k} = (randn(M, d) + 1j*randn(M, d))/sqrt(2);
+        W{k} = W{k} * sqrt(P_BS/K) / norm(W{k}, 'fro');  % normalize power
+    end
+
+    % Compute ground-truth sum-rate
+    sum_rate = compute_sum_rate_stable(H, G, W, Theta, sigma2);
+
+    % Validate range and store
+    if isfinite(sum_rate) && sum_rate > 0 && sum_rate < 50
+        valid_samples = valid_samples + 1;
+        features = extract_physics_features(H, G, W, Theta, sigma2);
+        X_train(:, valid_samples) = features;
+        Y_train(valid_samples) = sum_rate;
+
+        if mod(valid_samples, 100) == 0
+            fprintf('Valid samples: %d/%d\n', valid_samples, N_samples);
+        end
+    end
+end
+
+% Trim excess preallocated space
+X_train = X_train(:, 1:valid_samples);
+Y_train = Y_train(1:valid_samples);
+N_samples = valid_samples;
+
+fprintf('Training data generation complete. Valid samples: %d\n', N_samples);
+fprintf('Sum-rate range: %.4f – %.4f bps/Hz\n', min(Y_train), max(Y_train));
+
+%% === Data Preprocessing ===
+% Remove outliers and normalize features
+Q1 = quantile(Y_train, 0.1);
+Q3 = quantile(Y_train, 0.9);
+valid_idx = (Y_train >= Q1) & (Y_train <= Q3);
+X_train = X_train(:, valid_idx);
+Y_train = Y_train(valid_idx);
+N_samples = length(Y_train);
+
+fprintf('\nAfter outlier removal: %d samples retained\n', N_samples);
+
+X_mean = mean(X_train, 2);
+X_std = std(X_train, 0, 2) + 1e-8;
+X_train_norm = (X_train - X_mean) ./ X_std;
+Y_mean = mean(Y_train);
+Y_std = std(Y_train) + 1e-8;
+Y_train_norm = (Y_train - Y_mean) / Y_std;
 %% === Core Feature Extraction Function ===
-% Extracts physics-based features from RIS channel and configuration.
+% Extracts physics-informed features from RIS channel and configuration.
 function features = extract_physics_features(H, G, W, Theta, sigma2)
     K = length(G);
     Psi = diag(exp(1j * Theta));
@@ -61,68 +156,6 @@ function features = extract_physics_features(H, G, W, Theta, sigma2)
     features = [features; cond_num];
 end
 
-%% === Dataset Generation ===
-N_samples = 800;
-N_test = 200;
-
-fprintf('Generating %d training samples...\n', N_samples);
-
-% Determine feature dimension
-H_temp = (randn(N, M) + 1j*randn(N, M))/sqrt(2);
-G_temp = cell(K, 1);
-W_temp = cell(K, 1);
-for k = 1:K
-    G_temp{k} = (randn(1, N) + 1j*randn(1, N))/sqrt(2);
-    W_temp{k} = (randn(M, d) + 1j*randn(M, d))/sqrt(2);
-end
-Theta_temp = 2*pi*rand(N, 1);
-
-features_temp = extract_physics_features(H_temp, G_temp, W_temp, Theta_temp, sigma2);
-feature_dim = length(features_temp);
-fprintf('Feature dimension: %d (vs. 1792 in raw vectorization)\n', feature_dim);
-
-% Generate valid training samples
-X_train = zeros(feature_dim, N_samples);
-Y_train = zeros(1, N_samples);
-valid_samples = 0;
-
-for sample = 1:N_samples * 2  % Generate extra to filter invalid cases
-    if valid_samples >= N_samples
-        break;
-    end
-
-    % Randomized channel and beamforming generation
-    H = (randn(N, M) + 1j*randn(N, M))/sqrt(2);
-    G = cell(K, 1); 
-    W = cell(K, 1);
-    for k = 1:K
-        G{k} = (randn(1, N) + 1j*randn(1, N))/sqrt(2);
-        W{k} = (randn(M, d) + 1j*randn(M, d))/sqrt(2);
-        W{k} = W{k} * sqrt(P_BS/K) / norm(W{k}, 'fro');
-    end
-    Theta = 2*pi*rand(N, 1);
-
-    % Compute ground-truth sum-rate
-    sum_rate = compute_sum_rate_stable(H, G, W, Theta, sigma2);
-
-    % Validate range and store
-    if isfinite(sum_rate) && sum_rate > 0 && sum_rate < 50
-        valid_samples = valid_samples + 1;
-        features = extract_physics_features(H, G, W, Theta, sigma2);
-        X_train(:, valid_samples) = features;
-        Y_train(valid_samples) = sum_rate;
-        if mod(valid_samples, 100) == 0
-            fprintf('Valid samples: %d/%d\n', valid_samples, N_samples);
-        end
-    end
-end
-
-X_train = X_train(:, 1:valid_samples);
-Y_train = Y_train(1:valid_samples);
-N_samples = valid_samples;
-
-fprintf('Training data generation complete. Valid samples: %d\n', N_samples);
-fprintf('Sum-rate range: %.4f – %.4f bps/Hz\n', min(Y_train), max(Y_train));
 
 %% === Feature Correlation Analysis ===
 fprintf('\nAnalyzing feature–target correlations...\n');
@@ -141,23 +174,7 @@ fprintf('  Mean correlation: %.4f\n', mean(correlations));
 fprintf('  Highly correlated features (>0.5): %d\n', sum(correlations > 0.5));
 fprintf('  Moderately correlated features (>0.3): %d\n', sum(correlations > 0.3));
 
-%% === Data Preprocessing ===
-% Remove outliers and normalize features
-Q1 = quantile(Y_train, 0.1);
-Q3 = quantile(Y_train, 0.9);
-valid_idx = (Y_train >= Q1) & (Y_train <= Q3);
-X_train = X_train(:, valid_idx);
-Y_train = Y_train(valid_idx);
-N_samples = length(Y_train);
 
-fprintf('\nAfter outlier removal: %d samples retained\n', N_samples);
-
-X_mean = mean(X_train, 2);
-X_std = std(X_train, 0, 2) + 1e-8;
-X_train_norm = (X_train - X_mean) ./ X_std;
-Y_mean = mean(Y_train);
-Y_std = std(Y_train) + 1e-8;
-Y_train_norm = (Y_train - Y_mean) / Y_std;
 
 %% === Baseline Model: Linear Regression ===
 fprintf('\nRunning baseline linear regression...\n');
@@ -272,101 +289,95 @@ else
     r2_train = r2_linear;
 end
 
-%% === Test Data Generation ===
-fprintf('\n=== Generating test dataset... ===\n');
+%% === Test Stage: Evaluate Model Under Different K Values ===
+fprintf('\n=== Testing model under different K factors... ===\n');
 
-X_test = zeros(feature_dim, N_test);
-Y_test = zeros(1, N_test);
-valid_test = 0;
+K_test_values = [0,5,10];   % Test under Rayleigh and two Rician levels
 
-for sample = 1:N_test * 2
-    if valid_test >= N_test
-        break;
+results = zeros(length(K_test_values), 3); % Store [R2, RMSE, MAE]
+
+for idx = 1:length(K_test_values)
+
+    K_factor_test = K_test_values(idx);
+    fprintf('\n--- Generating test dataset for K = %d ---\n', K_factor_test);
+    %% ------------------ Test Data Generation ------------------
+    X_test = zeros(feature_dim, N_test);
+    Y_test = zeros(1, N_test);
+    valid_test = 0;
+
+    while valid_test < N_test
+        
+        % --- Generate Rician/Rayleigh channels (same style as training) ---
+        % Tx -> RIS
+        H_LOS_test = ones(N, M);
+        H_NLOS_test = (randn(N, M)+1j*randn(N, M))/sqrt(2);
+        H_test = sqrt(K_factor_test/(K_factor_test+1))*H_LOS_test + ...
+                 sqrt(1/(K_factor_test+1))*H_NLOS_test;
+
+        % RIS -> Users
+        G_test = cell(K,1);
+        for k = 1:K
+            G_LOS_test = ones(1, N);
+            G_NLOS_test = (randn(1, N)+1j*randn(1, N))/sqrt(2);
+            G_test{k} = sqrt(K_factor_test/(K_factor_test+1))*G_LOS_test + ...
+                        sqrt(1/(K_factor_test+1))*G_NLOS_test;
+        end
+
+        % Random RIS phases
+        Theta_test = 2*pi*rand(N, 1);
+
+        % Beamforming
+        W_test = cell(K,1);
+        for k = 1:K
+            W_test{k} = (randn(M, d)+1j*randn(M, d))/sqrt(2);
+            W_test{k} = W_test{k} * sqrt(P_BS/K) / norm(W_test{k}, 'fro');
+        end
+
+        % Compute ground-truth rate
+        sum_rate_test = compute_sum_rate_stable(H_test, G_test, W_test, Theta_test, sigma2);
+
+        if isfinite(sum_rate_test) && sum_rate_test > 0 && sum_rate_test < 50
+            valid_test = valid_test + 1;
+            features_test = extract_physics_features(H_test, G_test, W_test, Theta_test, sigma2);
+            X_test(:, valid_test) = features_test;
+            Y_test(valid_test) = sum_rate_test;
+        end
     end
 
-    % Generate random test channel parameters
-    H_test = (randn(N, M) + 1j*randn(N, M)) / sqrt(2);
-    G_test = cell(K, 1);
-    W_test = cell(K, 1);
+    %% ------------------ Model Evaluation ------------------
+    X_test_norm = (X_test - X_mean) ./ X_std;
+    X_test_selected = X_test_norm(top_features, :);
 
-    for k = 1:K
-        G_test{k} = (randn(1, N) + 1j*randn(1, N)) / sqrt(2);
-        W_test{k} = (randn(M, d) + 1j*randn(M, d)) / sqrt(2);
-        W_test{k} = W_test{k} * sqrt(P_BS/K) / norm(W_test{k}, 'fro');
-    end
-
-    % Random phase configuration for RIS
-    Theta_test = 2*pi*rand(N, 1);
-
-    % Compute ground-truth sum-rate for test case
-    sum_rate_test = compute_sum_rate_stable(H_test, G_test, W_test, Theta_test, sigma2);
-
-    % Store only valid samples
-    if isfinite(sum_rate_test) && sum_rate_test > 0 && sum_rate_test < 50
-        valid_test = valid_test + 1;
-        features_test = extract_physics_features(H_test, G_test, W_test, Theta_test, sigma2);
-        X_test(:, valid_test) = features_test;
-        Y_test(valid_test) = sum_rate_test;
-    end
-end
-
-X_test = X_test(:, 1:valid_test);
-Y_test = Y_test(1:valid_test);
-N_test = valid_test;
-
-fprintf('Test dataset generated successfully. Valid samples: %d\n', N_test);
-
-%% === Model Evaluation on Test Set ===
-fprintf('\n=== Evaluating model on test data... ===\n');
-
-% Normalize test data using training statistics
-X_test_norm = (X_test - X_mean) ./ X_std;
-X_test_selected = X_test_norm(top_features, :);
-
-if exist('W3', 'var')  
-    % === Neural Network (2-layer) prediction ===
+    % Neural network forward pass
     Z1_test = W1 * X_test_selected + b1;
-    A1_test = max(0, Z1_test);     % ReLU activation
+    A1_test = max(0, Z1_test);
 
     Z2_test = W2 * A1_test + b2;
-    A2_test = max(0, Z2_test);     % Second ReLU
+    A2_test = max(0, Z2_test);
 
     Z3_test = W3 * A2_test + b3;
     Y_pred_test_norm = Z3_test;
     Y_pred_test = Y_pred_test_norm * Y_std + Y_mean;
 
-    model_type = 'Neural Network (Optimized)';
+    % Metrics
+    mse = mean((Y_pred_test - Y_test).^2);
+    rmse = sqrt(mse);
+    mae = mean(abs(Y_pred_test - Y_test));
+    SS_res_test = sum((Y_test - Y_pred_test).^2);
+    SS_tot_test = sum((Y_test - mean(Y_test)).^2);
+    r2_test = 1 - SS_res_test / SS_tot_test;
 
-elseif exist('W2', 'var')
-    % === Neural Network (1-layer) prediction ===
-    Z1_test = W1 * X_test_selected + b1;
-    A1_test = tanh(Z1_test);
-    Z2_test = W2 * A1_test + b2;
-    Y_pred_test_norm = Z2_test;
-    Y_pred_test = Y_pred_test_norm * Y_std + Y_mean;
+    % Store and display
+    results(idx,:) = [r2_test, rmse, mae];
+    fprintf('K = %d:   R² = %.4f,   RMSE = %.4f,   MAE = %.4f\n', ...
+            K_factor_test, r2_test, rmse, mae);
 
-    model_type = 'Neural Network (1-layer)';
-else
-    % === Linear regression baseline ===
-    Y_pred_test_norm = beta' * X_test_selected;
-    Y_pred_test = Y_pred_test_norm * Y_std + Y_mean;
-    model_type = 'Linear Regression';
 end
 
-% === Performance Metrics ===
-mse = mean((Y_pred_test - Y_test).^2);
-rmse = sqrt(mse);
-mae = mean(abs(Y_pred_test - Y_test));
-SS_res_test = sum((Y_test - Y_pred_test).^2);
-SS_tot_test = sum((Y_test - mean(Y_test)).^2);
-r2_test = 1 - SS_res_test / SS_tot_test;
+fprintf('\n=== Final Test Results (Train K=0) ===\n');
+disp(table(K_test_values', results(:,1), results(:,2), results(:,3), ...
+     'VariableNames', {'K','R2','RMSE','MAE'}));
 
-fprintf('Model type: %s\n', model_type);
-fprintf('  MSE  = %.6f\n', mse);
-fprintf('  RMSE = %.6f\n', rmse);
-fprintf('  MAE  = %.6f\n', mae);
-fprintf('  R²   = %.6f\n', r2_test);
-fprintf('-------------------------------------------\n');
 
 %% === Visualization ===
 figure('Units','normalized','Position',[0.1 0.1 0.8 0.4]);
@@ -399,6 +410,18 @@ ylabel('Predicted Sum Rate');
 title(['Neural network model R² = ', num2str(r2_test, '%.4f')]);
 grid on;
 axis equal;
+%% === Visualization: R² Across K-Factors ===
+figure;
+K_vals = K_test_values;
+R2_vals = results(:,1);
+
+bar(K_vals, R2_vals, 0.5);
+xlabel('Rician K-Factor');
+ylabel('R^2');
+title('Generalization: R^2 Across K-Factors (Train K=0)');
+ylim([0 1]);
+grid on;
+set(gca, 'FontSize', 12);
 
 
 %% === Helper Function ===
