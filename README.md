@@ -110,11 +110,11 @@ git clone https://github.com/yazhexu/learning-based-ris-optimization.git
 cd learning-based-ris-optimization
 ```
 ### Step 2. Run in MATLAB
-```
-% Baseline (linear regression)
+```matlab
+% Baseline model (linear regression)
 ris_baseline;
 
-% Neural network training with GD + generalization (K=0,5,10)
+% Neural network (GD training + generalization K=0,5,10)
 ris_nn_final;
 ```
 ### Step 3. Outputs
