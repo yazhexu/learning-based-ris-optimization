@@ -1,67 +1,22 @@
 ## Optimization Algorithms for Training Neural Networks in RIS Systems
 
-This repository contains the implementation and simulation scripts for my research on algorithmic optimization in Reconfigurable Intelligent Surface (RIS) systems.  
-The project focuses on using optimization algorithms to improve neural-network model fitting and 
-predictive accuracy in realistic RIS environments.
-## Research Motivation
+This repository contains a complete learning-based pipeline for modeling and analyzing reconfigurable intelligent surface (RIS)–assisted wireless channels.  
+The project evaluates optimization algorithms, neural network model performance, and generalization behaviour under different RIS channel distributions.  
+Work conducted under supervision of Prof. Ender Ayanoglu (UC Irvine).
+## Motivation
 
-Modern wireless communication systems, such as RIS-assisted networks, involve complex, high-dimensional environments that cannot be easily described by explicit mathematical models.  
-To capture the underlying physical behaviors, data-driven models are often used to approximate system dynamics.  
-However, achieving high-fidelity model fitting to realistic RIS behavior remains a challenge.  
-This project explores how optimization algorithms can be used to train neural-network models that more accurately represent real RIS systems.
+RIS-assisted channels are highly nonlinear and high-dimensional due to the cascaded Tx–RIS–Rx propagation and phase configuration. Direct analytical evaluation is expensive, so fast and accurate neural-network surrogate models are valuable for system design.  
+This project studies:  
+how different training algorithms behave,  
+how well a neural predictor models RIS-assisted sum-rate,  
+and how the model generalizes under distribution shift (Rayleigh → Rician, K=0/5/10).
 
-## Methodology
 
+## Experiments & Results
 
-```
-Raw RIS Channel (1664-d)
-          ↓
-Physics-Informed Feature Extraction (23-d)
-          ↓
-Feature–Target Correlation Analysis
-          ↓
-Neural Network Training (optimizer comparison: GD / GA / PSO / SA; final model: GD)
-          ↓
-RIS System Integration (NN-based vs. baseline)
-          ↓
-Performance Evaluation (MSE / RMSE / MAE / R²)
-```
+### 1. Optimization Algorithm Benchmarking (GD / GA / PSO / SA)
+**Goal:** Compare convergence speed and robustness when training the same neural network on RIS-generated data.  
 
-## Results & Key Findings
-
-### 1. Optimization Algorithm Comparison
-Four optimization algorithms were used to train the neural network, and their convergence performance was compared in terms of **training speed** (epochs to reach Loss < 0.1) and **robustness** (standard deviation of final 50 losses).
-
-| Algorithm | Epochs (Loss < 0.1) | Robustness (Std of Final 50 Losses) |
-|------------|---------------------|-------------------------------------|
-| **Gradient Descent (GD)** | **81** | **0.000515** |
-| Particle Swarm Optimization (PSO) | 87 | 0.001067 |
-| Genetic Algorithm (GA) | 154 | 0.003393 |
-| Simulated Annealing (SA) | 1269 | 0.000000 |
-
-**Finding:**  
-Gradient Descent (GD) achieved the fastest convergence with stable performance, while GA and PSO also showed good robustness.  
-SA demonstrated stability but required significantly more iterations.
-
----
-
-### 2. Model Performance Comparison
-The trained neural network was compared against a linear baseline model under the same RIS setup.  
-Evaluation metrics include **MSE**, **RMSE**, **MAE**, and **R²**.
-
-| Model | MSE | RMSE | MAE | R² |
-|--------|------|------|------|------|
-| Linear Regression (Baseline) | 0.0885 | 0.2974 | 0.1532 | 0.8415 |
-| **Neural Network (Optimized)** | **0.0385** | **0.1962** | **0.1250** | **0.9292** |
-
-**Finding:**  
-The neural-network model trained with optimized algorithms improved system fitting accuracy by **over 10%** in R² compared to the baseline, demonstrating superior generalization and predictive stability in realistic RIS environments.
-
----
-
-### 3. Visualization
-
-**Figure 1.** Convergence curves of four optimization algorithms. 
 <p align="center">
   <img src="convergence_curves.png" alt="Convergence curves of four optimization algorithms" width="650">
 </p>
@@ -70,15 +25,60 @@ The neural-network model trained with optimized algorithms improved system fitti
   <b>Figure 1.</b> Convergence curves of four optimization algorithms.
 </p>
 
-**Figure 2.** Predicted vs. True Sum Rate (Neural Network vs. Baseline).  
+**Performance Metrics Summary**
+| Algorithm | Epochs (Loss < 0.1) | Robustness (Std of Final 50 Losses) |
+|------------|---------------------|-------------------------------------|
+| **Gradient Descent (GD)** | **81** | **0.000515** |
+| Particle Swarm Optimization (PSO) | 87 | 0.001067 |
+| Genetic Algorithm (GA) | 154 | 0.003393 |
+| Simulated Annealing (SA) | 1269 | 0.000000 |
+
+**Finding:**  
+Gradient Descent (GD) converges the fastest and remains highly stable.  
+PSO also reaches low loss with moderate stability, while GA shows larger fluctuations during training.  
+SA is numerically stable but requires far more iterations to achieve comparable loss levels.
+
+---
+
+### 2. Neural Network vs Baseline Model Performance
+**Goal:** Train a GD-optimized NN to predict RIS-assisted sum-rate and compare with a baseline.  
+
+
 <p align="center">
   <img src="r2_comparison.png" alt="Predicted vs. True Sum Rate for the baseline and neural network models" width="650">
 </p>
-
 <p align="center">
   <b>Figure 2.</b> Predicted vs. True Sum Rate for the neural network and baseline models.<br>
-  (a) Neural network model (R² = 0.9292)  (b) Baseline model (R² = 0.8415)
+  (a) Neural network model (R² = 0.9292)  (b) Baseline model (R² = 0.8415)         
 </p>
+
+**Performance Metrics Summary**
+| Model | MSE | RMSE | MAE | R² |
+|--------|------|------|------|------|
+| Linear Regression (Baseline) | 0.0885 | 0.2974 | 0.1532 | 0.8415 |
+| **Neural Network (Optimized)** | **0.0385** | **0.1962** | **0.1250** | **0.9292** |
+
+
+**Finding:**  
+NN reduces MSE by more than 50%.  
+R² improves from 0.84 → 0.93 (+10%).  
+NN captures nonlinear RIS-related behaviours more effectively.
+
+---
+
+
+### 3. Generalization Under K-Factor Shift (K = 0 / 5 / 10)
+
+**Goal:** Evaluate the trained NN when channel distribution shifts from Rayleigh (K=0) to Rician (K=5,10).
+<p align="center">
+  <img src="generalization_r2_k0_k5_k10.png" alt="R² across Rician K-factors" width="650">
+</p>
+
+<p align="center">
+  <b>Figure 3.</b> R² performance of the trained neural network evaluated on channels with different Rician K-factors (train K = 0).
+</p>
+
+
 
 ## Code Structure
 ```
