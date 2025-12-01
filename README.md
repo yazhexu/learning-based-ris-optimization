@@ -1,4 +1,4 @@
-## Optimization Algorithms for Training Neural Networks in RIS Systems
+## Neural Network Optimization and Generalization in RIS Systems
 
 This repository contains a complete learning-based pipeline for modeling and analyzing reconfigurable intelligent surface (RIS)–assisted wireless channels.  
 The project evaluates optimization algorithms, neural network model performance, and generalization behaviour under different RIS channel distributions.  
@@ -9,7 +9,7 @@ RIS-assisted channels are highly nonlinear and high-dimensional due to the casca
 This project studies:  
 How different training algorithms behave,  
 How well a neural predictor models RIS-assisted sum-rate,  
-How the model generalizes under distribution shift (Rayleigh → Rician, K=0/5/10).
+How the model generalizes under distribution shift (Rayleigh → Rician, K=0/1/5/10).
 
 
 ## Experiments & Results
@@ -100,10 +100,12 @@ The NN handles deterministic LOS components in Rician fading more effectively af
 ## Code Structure
 ```
 ├── ris_baseline.m                 # Linear regression baseline model training and evaluation
-├── ris_nn_final.m                 # Neural network training with GD + generalization (K=0,5,10)
+├── ris_nn_final.m                 # Original neural network training with GD
+├── ris_nn_optimized.m             # Optimized neural network training with improved generalization
 ├── convergence_curves.png         # Convergence curves of four optimization algorithms
 ├── r2_comparison.png              # Predicted vs. True Sum Rate comparison (Baseline vs. NN)
-├── generalization_r2_k0_k5_k10.png # R² across Rician K-factors (generalization test)
+├── generalization_r2_before.png   # R² across Rician K-factors before optimization
+├── generalization_r2_after.png    # R² across Rician K-factors after optimization
 ├── README.md                      # Project documentation
 └── LICENSE                        # License file
 ```
@@ -121,14 +123,19 @@ cd learning-based-ris-optimization
 % Baseline model (linear regression)
 ris_baseline;
 
-% Neural network (GD training + generalization K=0,5,10)
+% Original neural network 
 ris_nn_final;
+
+% Optimized neural network
+ris_nn_optimized;
+
 ```
 ### Step 3. Outputs
 
 - `baseline_performance.png` — Predicted vs. true sum rate (baseline)
 - `nn_performance.png` — Predicted vs. true sum rate (neural network)
-- `generalization_r2_k0_k5_k10.png` — R² across Rician K-factors (generalization)
+- `generalization_r2_before.png` — R² across Rician K-factors (before optimization, train K=0)
+- `generalization_r2_after.png` — R² across Rician K-factors (after optimization, train K=0)
 - Key metrics (MSE, RMSE, MAE, R²) printed in the MATLAB command window
 
 ## Author & Acknowledgment
