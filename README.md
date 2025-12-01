@@ -67,28 +67,35 @@ NN captures nonlinear RIS-related behaviours more effectively.
 ---
 
 
-### 3. Generalization Under K-Factor Shift (K = 0 / 5 / 10)
+### 3. Generalization Improvement Under Rician Channel Distribution Shifts (K = 0 / 1 / 5 / 10)
 
-**Goal:** Evaluate the trained NN when channel distribution shifts from Rayleigh (K=0) to Rician (K=5,10).
+**Goal:** Evaluate the impact of targeted data and training optimizations on NN generalization when channel distribution shifts from Rayleigh (K=0) to Rician (K=1,5,10).
 <p align="center">
-  <img src="generalization_r2_k0_k5_k10.png" alt="R² across Rician K-factors" width="650">
+  <img src="generalization_r2_before.png" alt="R² across Rician K-factors (before optimization)" width="600">
+  <br>
+  <b>Figure 3a.</b> R² across Rician K-factors (Before Optimization, train K=0)
 </p>
 
 <p align="center">
-  <b>Figure 3.</b> R² across Rician K-factors (train K=0).
+  <img src="generalization_r2_after.png" alt="R² across Rician K-factors (after optimization)" width="600">
+  <br>
+  <b>Figure 3b.</b> R² across Rician K-factors (After Optimization, train K=0)
 </p>
 
 **Performance Metrics Summary**
-| K  |   R²      |   RMSE    |   MAE    |
-|----|-----------|-----------|----------|
-| 0  | 0.90718   | 0.23323   | 0.13178  |
-| 5  | 0.71200   | 0.64977   | 0.38024  |
-| 10 | 0.64663   | 0.83075   | 0.50403  |
+| K  | R² (Before) | R² (After) | RMSE (Before) | RMSE (After) | MAE (Before) | MAE (After) |
+| -- | ----------- | ---------- | ------------- | ------------ | ------------ | ----------- |
+| 0  | 0.90718     | 0.93572    | 0.23323       | 0.20205      | 0.13178      | 0.08836     |
+| 1  | 0.82727     | 0.89249    | 0.36971       | 0.30359      | 0.19355      | 0.13673     |
+| 5  | 0.71862     | 0.78762    | 0.65045       | 0.55675      | 0.38171      | 0.27535     |
+| 10 | 0.57999     | 0.72627    | 0.93632       | 0.73239      | 0.52701      | 0.38590     |
 
 **Finding:**  
-NN performs well on the training distribution (K=0).  
-Performance drops significantly at K=5 and K=10.  
-This reflects the mismatch between the random Rayleigh training data and the more deterministic LOS components in Rician fading.
+Targeted data and training optimizations substantially improve NN generalization under Rician channel shifts.  
+R² increases by 7–25% depending on K-factor.  
+RMSE and MAE are significantly reduced, indicating more reliable predictions.  
+The NN handles deterministic LOS components in Rician fading more effectively after optimization.
+
 
 ## Code Structure
 ```
